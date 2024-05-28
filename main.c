@@ -51,45 +51,61 @@ void cadastrar(struct Cliente * cliente,int posicaoAtual){
 void depositar(struct Cliente * cliente,int posicaoAtual){
     char numeroConta[10];
     double valorDeposito;
-    printf("Digite o numero da Conta para deposito: ");
+    int Id = -1;
+    printf("Numero da Conta: ");
     scanf("%s",&numeroConta);
     for (int i = 0; i < posicaoAtual;i++){
         if (strcmp(numeroConta,cliente[i].conta.ContaCorrente)==0){
-            printf("Digite o valor a ser depositado: ");
-            scanf("%lf", &valorDeposito);
-            if (valorDeposito > 0){
-                cliente[i].conta.SaldoAtual = cliente[i].conta.SaldoAtual + valorDeposito;
-            }else{
-                printf("Valor inválido!\n");
-            }
-        }else{
-            printf("Conta Corrente não encontrada!\n");
+            Id = i;
+            break;
         }
     }
+    if (Id >= 0){
+        printf("Valor a ser depositado: ");
+        scanf("%lf", &valorDeposito);
+        if (valorDeposito > 0){
+            cliente[Id].conta.SaldoAtual = cliente[Id].conta.SaldoAtual + valorDeposito;
+            printf("Deposito Realizado com sucesso!\n");
+
+        }else{
+            printf("Valor inválido!\n");
+        }
+    }else{
+        printf("Conta Corrente não encontrada!\n");
+    }
+    sleep(1);
 }
 
 void sacar(struct Cliente * cliente,int posicaoAtual){
     char numeroConta[10];
     double valorSaque;
-    printf("Digite o numero da conta para saque: ");
+    int Id = -1;
+    printf("Numero da conta: ");
     scanf("%s",&numeroConta);
     for (int i = 0; i < posicaoAtual;i++){
         if (strcmp(numeroConta,cliente[i].conta.ContaCorrente)==0){
-            printf("Digite o valor a ser sacado: ");
-            scanf("%lf", &valorSaque);
-            if (valorSaque > 0 ){
-                if (valorSaque < cliente[i].conta.SaldoAtual){
-                    cliente[i].conta.SaldoAtual = cliente[i].conta.SaldoAtual - valorSaque;
-                }else{
-                    printf("Saldo Insuficiente!\n");
-                }
-            }else{
-                printf("Valor inválido!\n");
-            }
-        }else{
-            printf("Conta Corrente não encontrada!\n");
+            Id = i;
+            break;
         }
     }
+    if (Id >= 0){
+        printf("Valor a ser retirado: ");
+        scanf("%lf", &valorSaque);
+        if (valorSaque > 0 ){
+            if (valorSaque <= cliente[Id].conta.SaldoAtual){
+                cliente[Id].conta.SaldoAtual = cliente[Id].conta.SaldoAtual - valorSaque;
+                printf("Saque Realizado com sucesso!\n");
+
+            }else{
+                printf("Saldo Insuficiente!\n");
+            }
+        }else{
+            printf("Valor inválido!\n");
+        }
+    }else{
+        printf("Conta Corrente não encontrada!\n");
+    }
+    sleep(1);
 }
 
 
@@ -131,12 +147,14 @@ int main()
             case 5:
             break;
             case 6:
+                printf("\t\tTodos os Clientes\n");
+                printf("|Id\t|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
                 for (int i = 0; i < posicaoAtual;i++){
-                    printf("%d |",clientes[i].Id);
-                    printf("%s |",clientes[i].Nome);
-                    printf("%d |",clientes[i].conta.Agencia);
-                    printf("%s |",clientes[i].conta.ContaCorrente);
-                    printf("%.2f\n",clientes[i].conta.SaldoAtual);
+                    printf("|%d\t",clientes[i].Id);
+                    printf("|%s\t",clientes[i].Nome);
+                    printf("|%d\t\t",clientes[i].conta.Agencia);
+                    printf("|%s\t",clientes[i].conta.ContaCorrente);
+                    printf("|%.2f\n",clientes[i].conta.SaldoAtual);
                 }
             break;
             case 7:
