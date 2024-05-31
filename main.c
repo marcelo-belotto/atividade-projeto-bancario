@@ -14,7 +14,6 @@ struct Conta{
     struct Cliente cliente;
 };
 
-
 void menu(){
     for (int i = 0; i < 50; i++){
         printf("=");
@@ -32,77 +31,48 @@ void menu(){
     }
     printf("\n");
 }
-/*sacar, depositar, efetuar pix, cadastrar novo cliente, transferir dinheiro
-entre contas e consultar saldo. (A consulta deverá apresentar informação da conta de um
-cliente específico ou de todas as contas cadastradas).*/
 
 void cadastrar(struct Conta * contas,int posicaoAtual){
     contas[posicaoAtual].cliente.Id = posicaoAtual+1;
     printf("Nome do Cliente: ");
     scanf("%s", &contas[posicaoAtual].cliente.Nome);
-    printf("Agência da Conta: ");
+    printf("Agência: ");
     scanf("%d", &contas[posicaoAtual].Agencia);
-    printf("Numero da Conta: ");
+    printf("Conta: ");
     scanf("%s", &contas[posicaoAtual].ContaCorrente);
     contas[posicaoAtual].SaldoAtual = 0.00;
     printf("\nCliente Cadastrado com sucesso!\n");
 }
 
-void depositar(struct Conta * contas,int posicaoAtual){
+bool depositar(struct Conta * conta,double valorDeposito){
+    conta->SaldoAtual = conta->SaldoAtual + valorDeposito;
+    return true;
+}
 
-    double valorDeposito;
-    int IdCliente = localizaContaCorrente(contas,posicaoAtual);
-
-    if (IdCliente >= 0){
-        printf("Valor a ser depositado: ");
-        scanf("%lf", &valorDeposito);
-        if (valorDeposito > 0){
-            contas[IdCliente].SaldoAtual = contas[IdCliente].SaldoAtual + valorDeposito;
-            printf("Deposito Realizado com sucesso!\n");
-
-        }else{
-            printf("Valor inválido!\n");
-        }
+bool sacar(struct Conta * conta,double valorSaque){
+    if (valorSaque <= conta->SaldoAtual){
+        conta->SaldoAtual = conta->SaldoAtual - valorSaque;
+        return true;
     }else{
-        printf("Conta Corrente não encontrada!\n");
+        printf("Saldo Insuficiente!\n");
+        return false;
     }
-    sleep(1);
 }
 
-void sacar(struct Conta * contas,int posicaoAtual){
-    double valorSaque;
-    int IdCliente = localizaContaCorrente(contas,posicaoAtual);
 
-    if (IdCliente >= 0){
-        printf("Valor a ser retirado: ");
-        scanf("%lf", &valorSaque);
-        if (valorSaque > 0 ){
-            if (valorSaque <= contas[IdCliente].SaldoAtual){
-                contas[IdCliente].SaldoAtual = contas[IdCliente].SaldoAtual - valorSaque;
-                printf("Saque Realizado com sucesso!\n");
-
-            }else{
-                printf("Saldo Insuficiente!\n");
-            }
-        }else{
-            printf("Valor inválido!\n");
-        }
-    }else{
-        printf("Conta Corrente não encontrada!\n");
+bool transferir(struct Conta * origem, struct Conta * destino,double valorTransferencia){
+    if (sacar(origem,valorTransferencia)){
+        depositar(destino,valorTransferencia);
+        return true;
     }
-    sleep(1);
-}
-
-
-void transferir(){
+    return false;
 
 }
 
-int localizaContaCorrente(struct Conta * contas,int posicaoAtual){
+int localizarContaCorrente(struct Conta * contas,int posicaoAtual){
     char numeroConta[10];
-    double valorSaque;
     int Id = -1;
-    printf("Numero da conta: ");
+    printf("Conta Corrente: ");
     scanf("%s",&numeroConta);
     for (int i = 0; i < posicaoAtual;i++){
         if (strcmp(numeroConta,contas[i].ContaCorrente)==0){
@@ -113,11 +83,10 @@ int localizaContaCorrente(struct Conta * contas,int posicaoAtual){
     return Id;
 }
 
-void mostrarTodosOsDados(struct Conta * contas,int posicaoAtual){
+void exibirTodosOsClientes(struct Conta * contas,int posicaoAtual){
     printf("\t\tTodos os Clientes\n");
-    printf("|Id\t|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
+    printf("|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
     for (int i = 0; i < posicaoAtual;i++){
-        printf("|%d\t",contas[i].cliente.Id);
         printf("|%s\t",contas[i].cliente.Nome);
         printf("|%d\t\t",contas[i].Agencia);
         printf("|%s\t",contas[i].ContaCorrente);
@@ -125,11 +94,27 @@ void mostrarTodosOsDados(struct Conta * contas,int posicaoAtual){
     }
 }
 
+void exibirUmCliente(struct Conta * contas, int posicaoAtual){
+    int idCliente = localizarContaCorrente(contas,posicaoAtual);
+    if (idCliente >= 0){
+        printf("|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
+        printf("|%s\t",contas[idCliente].cliente.Nome);
+        printf("|%d\t\t",contas[idCliente].Agencia);
+        printf("|%s\t",contas[idCliente].ContaCorrente);
+        printf("|%.2f\n",contas[idCliente].SaldoAtual);
+    }
+}
+
+
+/*sacar, depositar, efetuar pix, cadastrar novo cliente, transferir dinheiro
+entre contas e consultar saldo. (A consulta deverá apresentar informação da conta de um
+cliente específico ou de todas as contas cadastradas).*/
 int main()
 {
     //ToDo: Carregar clientes através de um arquivo a parte
     bool menuAtivado = true;
     int opcaoSelecionada,posicaoAtual = 0;
+    double valorSaque,valorDeposito;
     struct Conta contas[5];
 
     while (menuAtivado){
@@ -147,24 +132,84 @@ int main()
             break;
             case 2:
                 if (posicaoAtual != 0){
-                    depositar(contas,posicaoAtual);
+                    int IdCliente = localizarContaCorrente(contas,posicaoAtual);
+                    if (IdCliente < 0){
+                        printf("Conta Corrente não encontrada!\n");
+                        break;
+                    }
+                    printf("Valor a ser Depositado: ");
+                    scanf("%lf", &valorDeposito);
+                    if (valorDeposito <= 0 ){
+                        printf("Valor inválido!\n");
+                        break;
+                    }
+                    if (depositar(&contas[IdCliente],valorDeposito)){
+                        printf("Deposito Realizado com sucesso!\n");
+                    }
                 }
             break;
             case 3:
-            if (posicaoAtual != 0){
-                    sacar(contas,posicaoAtual);
+                if (posicaoAtual != 0){
+                    int IdCliente = localizarContaCorrente(contas,posicaoAtual);
+                    if (IdCliente < 0){
+                        printf("Conta Corrente não encontrada!\n");
+                        break;
+                    }
+                    printf("Valor a ser retirado: ");
+                    scanf("%lf", &valorSaque);
+                    if (valorSaque < 0 ){
+                        printf("Valor inválido!\n");
+                        break;
+                    }
+                    if (sacar(&contas[IdCliente],valorSaque)){
+                        printf("Saque Realizado com sucesso!\n");
+                    }
+
                 }
             break;
             case 4:
-            //Transferir
+                if (posicaoAtual != 0){
+                    int idClienteOrigem,idClienteDestino;
+                    double valorTransferencia;
+                    printf("Origem:\n");
+                    idClienteOrigem = localizarContaCorrente(contas,posicaoAtual);
+                    if (idClienteOrigem < 0){
+                        printf("Conta de Origem não encontrada\n");
+                        break;
+                    }
+                    printf("Destino:\n");
+                    idClienteDestino = localizarContaCorrente(contas,posicaoAtual);
+                    if (idClienteDestino < 0){
+                        printf("Conta de Destino não encontrada\n");
+                        break;
+                    }
+                    printf("Valor da Transferência: ");
+                    scanf("%lf",&valorTransferencia);
+                    if (transferir(&contas[idClienteOrigem],&contas[idClienteDestino],valorTransferencia)){
+                        printf("Transferência realizada com sucesso!\n");
+                    }else{
+                        printf("Ocorreu um erro durante a Transferência!\n");
+                    }
+                }
             break;
             case 5:
             //Area Pix
             break;
             case 6:
-            //Consultar saldo
-            //ToDo: pesquisa binária
-                mostrarTodosOsDados(contas,posicaoAtual);
+                int opcaoExibirSaldo;
+                printf("1 - Pesquisar por conta\n2 - Exibir Todos\nOpção: ");
+                scanf("%d", &opcaoExibirSaldo);
+                switch (opcaoExibirSaldo){
+                    case 1:
+                        exibirUmCliente(contas,posicaoAtual);
+                    break;
+                    case 2:
+                        exibirTodosOsClientes(contas,posicaoAtual);
+                    break;
+                    default:
+                        printf("\nOpção Inválida!\n");
+                    break;
+                }
             break;
             case 7:
                 menuAtivado = false;
