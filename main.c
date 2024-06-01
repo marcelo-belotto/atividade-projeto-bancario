@@ -2,17 +2,18 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-struct Cliente{
+
+typedef struct{
     int Id;
     char Nome[50];
-};
+}Cliente;
 
-struct Conta{
+typedef struct{
     int Agencia;
     char ContaCorrente[10];
     double SaldoAtual;
-    struct Cliente cliente;
-};
+    Cliente cliente;
+}Conta;
 
 void menu(){
     for (int i = 0; i < 50; i++){
@@ -32,7 +33,7 @@ void menu(){
     printf("\n");
 }
 
-void cadastrar(struct Conta * contas,int posicaoAtual){
+void cadastrar(Conta * contas,int posicaoAtual){
     contas[posicaoAtual].cliente.Id = posicaoAtual+1;
     printf("Nome do Cliente: ");
     scanf("%s", &contas[posicaoAtual].cliente.Nome);
@@ -41,15 +42,14 @@ void cadastrar(struct Conta * contas,int posicaoAtual){
     printf("Conta: ");
     scanf("%s", &contas[posicaoAtual].ContaCorrente);
     contas[posicaoAtual].SaldoAtual = 0.00;
-    printf("\nCliente Cadastrado com sucesso!\n");
 }
 
-bool depositar(struct Conta * conta,double valorDeposito){
+bool depositar(Conta * conta,double valorDeposito){
     conta->SaldoAtual = conta->SaldoAtual + valorDeposito;
     return true;
 }
 
-bool sacar(struct Conta * conta,double valorSaque){
+bool sacar(Conta * conta,double valorSaque){
     if (valorSaque <= conta->SaldoAtual){
         conta->SaldoAtual = conta->SaldoAtual - valorSaque;
         return true;
@@ -59,8 +59,7 @@ bool sacar(struct Conta * conta,double valorSaque){
     }
 }
 
-
-bool transferir(struct Conta * origem, struct Conta * destino,double valorTransferencia){
+bool transferir(Conta * origem,Conta * destino,double valorTransferencia){
     if (sacar(origem,valorTransferencia)){
         depositar(destino,valorTransferencia);
         return true;
@@ -69,7 +68,7 @@ bool transferir(struct Conta * origem, struct Conta * destino,double valorTransf
 
 }
 
-int localizarContaCorrente(struct Conta * contas,int posicaoAtual){
+int localizarContaCorrente(Conta * contas,int posicaoAtual){
     char numeroConta[10];
     int Id = -1;
     printf("Conta Corrente: ");
@@ -83,7 +82,7 @@ int localizarContaCorrente(struct Conta * contas,int posicaoAtual){
     return Id;
 }
 
-void exibirTodosOsClientes(struct Conta * contas,int posicaoAtual){
+void exibirTodosOsClientes(Conta * contas,int posicaoAtual){
     printf("\t\tTodos os Clientes\n");
     printf("|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
     for (int i = 0; i < posicaoAtual;i++){
@@ -94,7 +93,7 @@ void exibirTodosOsClientes(struct Conta * contas,int posicaoAtual){
     }
 }
 
-void exibirUmCliente(struct Conta * contas, int posicaoAtual){
+void exibirUmCliente(Conta * contas, int posicaoAtual){
     int idCliente = localizarContaCorrente(contas,posicaoAtual);
     if (idCliente >= 0){
         printf("|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
@@ -105,29 +104,112 @@ void exibirUmCliente(struct Conta * contas, int posicaoAtual){
     }
 }
 
+int contarLinhas(const char *filename) {
+    FILE *arquivo = fopen(filename, "r");
+    if (!arquivo) {
+        //perror("Falha na conexão com o \"Banco de dados\"");
+        return -1;
+    }
+
+    int contador = 0;
+    char linha[256];
+
+    while (fgets(linha, sizeof(linha), arquivo)) {
+        contador++;
+    }
+
+    fclose(arquivo);
+    return contador;
+}
+
+void pegarDadosDoBanco(Conta * contas,const char *filename){
+    FILE *arquivo = fopen(filename, "r");
+    if (!arquivo) {
+        //perror("Falha na conexão com o \"Banco de dados\"");
+        return -1;
+    }
+    char linha[256];
+    int posicaoLinha = 0;
+    while (fgets(linha, sizeof(linha), arquivo)) {
+        linha[strcspn(linha, "\n")] = 0;
+        char *registro = strtok(linha, ",");
+        int coluna = 0;
+        while (registro && coluna < 5) {
+            switch (coluna) {
+                case 0:
+                    contas[posicaoLinha].cliente.Id = atoi(registro);
+                    break;
+                case 1:
+                    strncpy(contas[posicaoLinha].cliente.Nome, registro, 50);
+                    contas[posicaoLinha].cliente.Nome[49] = '\0';
+                    break;
+                case 2:
+                    contas[posicaoLinha].Agencia = atoi(registro);
+                    break;
+                case 3:
+                    strncpy(contas[posicaoLinha].ContaCorrente, registro, 10);
+                    contas[posicaoLinha].ContaCorrente[9] = '\0';
+                    break;
+                case 4:
+                    contas[posicaoLinha].SaldoAtual = atof(registro);
+                    break;
+            }
+            registro = strtok(NULL, ",");
+            coluna++;
+        }
+        posicaoLinha++;
+    }
+    fclose(arquivo);
+}
+
+bool adicionarAoBanco(Conta* conta,const char *filename){
+    FILE *arquivo = fopen(filename,"a");
+    if (!arquivo) {
+        return false;
+    }
+    fprintf(arquivo, "%d,%s,%d,%s,%.2f\n", conta->cliente.Id, conta->cliente.Nome,
+    conta->Agencia,conta->ContaCorrente,conta->SaldoAtual);
+    fclose(arquivo);
+    return true;
+}
 
 /*sacar, depositar, efetuar pix, cadastrar novo cliente, transferir dinheiro
 entre contas e consultar saldo. (A consulta deverá apresentar informação da conta de um
 cliente específico ou de todas as contas cadastradas).*/
 int main()
 {
-    //ToDo: Carregar clientes através de um arquivo a parte
+    const char *dataBase = "database.csv";
     bool menuAtivado = true;
     int opcaoSelecionada,posicaoAtual = 0;
     double valorSaque,valorDeposito;
-    struct Conta contas[5];
+    int capacidade = contarLinhas(dataBase);
+    Conta *contas;
+
+    if (capacidade < 0){
+        capacidade = 5;
+        contas = (Conta *)malloc(capacidade * sizeof(Conta));
+    }else{
+        posicaoAtual = capacidade;
+        contas = (Conta *)malloc(capacidade * sizeof(Conta));
+        pegarDadosDoBanco(contas,dataBase);
+    }
 
     while (menuAtivado){
         menu();
+        if(posicaoAtual >= capacidade){
+            capacidade *= 2;
+            contas = realloc(contas,capacidade * sizeof(Conta));
+        }
         printf("OPERAÇÃO: ");
         scanf("%d",&opcaoSelecionada);
         switch(opcaoSelecionada){
             case 1:
-                if(posicaoAtual < 5){
-                    cadastrar(contas,posicaoAtual);
+                cadastrar(contas,posicaoAtual);
+                if (adicionarAoBanco(&contas[posicaoAtual],dataBase)){
+                    printf("\nCliente Cadastrado com sucesso!\n");
                     posicaoAtual++;
                 }else{
-                    printf("Numero de Clientes totais atingido!");
+                    printf("\nFalha ao Cadastras novo cliente!\n");
                 }
             break;
             case 2:
@@ -212,6 +294,7 @@ int main()
                 }
             break;
             case 7:
+                free(contas);
                 menuAtivado = false;
             break;
             default:
