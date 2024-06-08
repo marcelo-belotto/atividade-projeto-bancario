@@ -50,6 +50,10 @@ bool depositar(Conta * conta,double valorDeposito){
 }
 
 bool sacar(Conta * conta,double valorSaque){
+    if (valorSaque < 0){
+        printf("Valor Inválido!\n");
+        return false;
+    }
     if (valorSaque <= conta->SaldoAtual){
         conta->SaldoAtual = conta->SaldoAtual - valorSaque;
         return true;
@@ -83,10 +87,10 @@ int localizarContaCorrente(Conta * contas,int posicaoAtual){
 }
 
 void exibirTodosOsClientes(Conta * contas,int posicaoAtual){
-    printf("\t\tTodos os Clientes\n");
-    printf("|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
+    printf("\t\t\tTodos os Clientes\n");
+    printf("Nome\t\t|Agencia\t|Conta\t|Saldo\n\n");
     for (int i = 0; i < posicaoAtual;i++){
-        printf("|%s\t",contas[i].cliente.Nome);
+        printf("%-15s\t",contas[i].cliente.Nome);
         printf("|%d\t\t",contas[i].Agencia);
         printf("|%s\t",contas[i].ContaCorrente);
         printf("|%.2f\n",contas[i].SaldoAtual);
@@ -107,7 +111,6 @@ void exibirUmCliente(Conta * contas, int posicaoAtual){
 int contarLinhas(const char *filename) {
     FILE *arquivo = fopen(filename, "r");
     if (!arquivo) {
-        //perror("Falha na conexão com o \"Banco de dados\"");
         return -1;
     }
 
@@ -124,10 +127,6 @@ int contarLinhas(const char *filename) {
 
 void pegarDadosDoBanco(Conta * contas,const char *filename){
     FILE *arquivo = fopen(filename, "r");
-    if (!arquivo) {
-        //perror("Falha na conexão com o \"Banco de dados\"");
-        return -1;
-    }
     char linha[256];
     int posicaoLinha = 0;
     while (fgets(linha, sizeof(linha), arquivo)) {
@@ -137,20 +136,25 @@ void pegarDadosDoBanco(Conta * contas,const char *filename){
         while (registro && coluna < 5) {
             switch (coluna) {
                 case 0:
+                //ID
                     contas[posicaoLinha].cliente.Id = atoi(registro);
                     break;
                 case 1:
+                //CLIENTE
                     strncpy(contas[posicaoLinha].cliente.Nome, registro, 50);
                     contas[posicaoLinha].cliente.Nome[49] = '\0';
                     break;
                 case 2:
+                //AGENCIA
                     contas[posicaoLinha].Agencia = atoi(registro);
                     break;
                 case 3:
+                //CONTA CORRENTE
                     strncpy(contas[posicaoLinha].ContaCorrente, registro, 10);
                     contas[posicaoLinha].ContaCorrente[9] = '\0';
                     break;
                 case 4:
+                //SALDO ATUAL
                     contas[posicaoLinha].SaldoAtual = atof(registro);
                     break;
             }
@@ -173,16 +177,31 @@ bool adicionarAoBanco(Conta* conta,const char *filename){
     return true;
 }
 
-/*sacar, depositar, efetuar pix, cadastrar novo cliente, transferir dinheiro
+void atualizaBancoDeDados(Conta* contas,int posicaoAtual, const char *filename){
+    remove(filename);
+    FILE * arquivo = fopen(filename,"wt");
+    if (!arquivo) {
+        return;
+    }
+    for (int i = 0; i < posicaoAtual;i++){
+        fprintf(arquivo, "%d,%s,%d,%s,%.2f\n", contas[i].cliente.Id, contas[i].cliente.Nome,contas[i].Agencia,
+        contas[i].ContaCorrente,contas[i].SaldoAtual);
+    }
+    fclose(arquivo);
+}
+
+/*DESCRIÇÂO DO PROBLEMA
+sacar, depositar, efetuar pix, cadastrar novo cliente, transferir dinheiro
 entre contas e consultar saldo. (A consulta deverá apresentar informação da conta de um
 cliente específico ou de todas as contas cadastradas).*/
+
 int main()
 {
-    const char *dataBase = "database.csv";
+    const char *database = "database.csv";
     bool menuAtivado = true;
     int opcaoSelecionada,posicaoAtual = 0;
     double valorSaque,valorDeposito;
-    int capacidade = contarLinhas(dataBase);
+    int capacidade = contarLinhas(database);
     Conta *contas;
 
     if (capacidade < 0){
@@ -191,7 +210,7 @@ int main()
     }else{
         posicaoAtual = capacidade;
         contas = (Conta *)malloc(capacidade * sizeof(Conta));
-        pegarDadosDoBanco(contas,dataBase);
+        pegarDadosDoBanco(contas,database);
     }
 
     while (menuAtivado){
@@ -205,11 +224,11 @@ int main()
         switch(opcaoSelecionada){
             case 1:
                 cadastrar(contas,posicaoAtual);
-                if (adicionarAoBanco(&contas[posicaoAtual],dataBase)){
+                if (adicionarAoBanco(&contas[posicaoAtual],database)){
                     printf("\nCliente Cadastrado com sucesso!\n");
                     posicaoAtual++;
                 }else{
-                    printf("\nFalha ao Cadastras novo cliente!\n");
+                    printf("\nFalha ao Cadastrar novo cliente!\n");
                 }
             break;
             case 2:
@@ -219,8 +238,15 @@ int main()
                         printf("Conta Corrente não encontrada!\n");
                         break;
                     }
+                    char valorTemp[200];
                     printf("Valor a ser Depositado: ");
-                    scanf("%lf", &valorDeposito);
+                    scanf("%s", &valorTemp);
+                    for (int i = 0; i < strlen(valorTemp);i++){
+                        if (valorTemp[i] == ','){
+                            valorTemp[i] = '.';
+                        }
+                    }
+                    valorDeposito = atof(valorTemp);
                     if (valorDeposito <= 0 ){
                         printf("Valor inválido!\n");
                         break;
@@ -237,8 +263,15 @@ int main()
                         printf("Conta Corrente não encontrada!\n");
                         break;
                     }
+                    char valorTemp[200];
                     printf("Valor a ser retirado: ");
-                    scanf("%lf", &valorSaque);
+                    scanf("%s", &valorTemp);
+                    for (int i = 0; i < strlen(valorTemp);i++){
+                        if (valorTemp[i] == ','){
+                            valorTemp[i] = '.';
+                        }
+                    }
+                    valorSaque = atof(valorTemp);
                     if (valorSaque < 0 ){
                         printf("Valor inválido!\n");
                         break;
@@ -246,36 +279,42 @@ int main()
                     if (sacar(&contas[IdCliente],valorSaque)){
                         printf("Saque Realizado com sucesso!\n");
                     }
-
                 }
             break;
             case 4:
                 if (posicaoAtual != 0){
-                    int idClienteOrigem,idClienteDestino;
+                    int posicaoClienteOrigem,posicaoClienteDestino;
                     double valorTransferencia;
                     printf("Origem:\n");
-                    idClienteOrigem = localizarContaCorrente(contas,posicaoAtual);
-                    if (idClienteOrigem < 0){
+                    posicaoClienteOrigem = localizarContaCorrente(contas,posicaoAtual);
+                    if (posicaoClienteOrigem < 0){
                         printf("Conta de Origem não encontrada\n");
                         break;
                     }
                     printf("Destino:\n");
-                    idClienteDestino = localizarContaCorrente(contas,posicaoAtual);
-                    if (idClienteDestino < 0){
+                    posicaoClienteDestino = localizarContaCorrente(contas,posicaoAtual);
+                    if (posicaoClienteDestino < 0){
                         printf("Conta de Destino não encontrada\n");
                         break;
                     }
+                    char valorTemp[200];
                     printf("Valor da Transferência: ");
-                    scanf("%lf",&valorTransferencia);
-                    if (transferir(&contas[idClienteOrigem],&contas[idClienteDestino],valorTransferencia)){
+                    scanf("%s",&valorTemp);
+                    for (int i = 0; i < strlen(valorTemp);i++){
+                        if (valorTemp[i] == ','){
+                            valorTemp[i] = '.';
+                        }
+                    }
+                    valorTransferencia = atof(valorTemp);
+                    if (transferir(&contas[posicaoClienteOrigem],&contas[posicaoClienteDestino],valorTransferencia)){
                         printf("Transferência realizada com sucesso!\n");
                     }else{
                         printf("Ocorreu um erro durante a Transferência!\n");
                     }
                 }
-            break;
+                break;
             case 5:
-            //Area Pix
+                    //Area Pix
             break;
             case 6:
                 int opcaoExibirSaldo;
@@ -294,13 +333,14 @@ int main()
                 }
             break;
             case 7:
-                free(contas);
+
                 menuAtivado = false;
             break;
             default:
                 printf("Opção Inválida!\n");
             break;
-
         }
+        atualizaBancoDeDados(contas,posicaoAtual,database);
     }
+    free(contas);
 }
