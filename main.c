@@ -33,15 +33,30 @@ void menu(){
     printf("\n");
 }
 
-void cadastrar(Conta * contas,int posicaoAtual){
-    contas[posicaoAtual].cliente.Id = posicaoAtual+1;
+bool cadastrar(Conta * contas,int posicaoAtual){
+    int idTemp = posicaoAtual+1;
+    char nomeTemp[50];
+    int agenciaTemp;
+    char contaCorrente[50];
+
     printf("Nome do Cliente: ");
-    scanf("%s", &contas[posicaoAtual].cliente.Nome);
+    scanf("%s", &nomeTemp);
     printf("Agência: ");
-    scanf("%d", &contas[posicaoAtual].Agencia);
+    scanf("%d", &agenciaTemp);
     printf("Conta: ");
-    scanf("%s", &contas[posicaoAtual].ContaCorrente);
+    scanf("%s", &contaCorrente);
+
+    for (int i = 0; i < posicaoAtual;i++){
+        if (strcmp(contaCorrente,contas[i].ContaCorrente)==0){
+            return false;
+        }
+    }
+    contas[posicaoAtual].cliente.Id = idTemp;
+    strcpy(contas[posicaoAtual].cliente.Nome,nomeTemp);
+    contas[posicaoAtual].Agencia = agenciaTemp;
+    strcpy(contas[posicaoAtual].ContaCorrente,contaCorrente);
     contas[posicaoAtual].SaldoAtual = 0.00;
+    return true;
 }
 
 bool depositar(Conta * conta,double valorDeposito){
@@ -223,12 +238,15 @@ int main()
         scanf("%d",&opcaoSelecionada);
         switch(opcaoSelecionada){
             case 1:
-                cadastrar(contas,posicaoAtual);
-                if (adicionarAoBanco(&contas[posicaoAtual],database)){
-                    printf("\nCliente Cadastrado com sucesso!\n");
-                    posicaoAtual++;
+                if (cadastrar(contas,posicaoAtual)){
+                    if (adicionarAoBanco(&contas[posicaoAtual],database)){
+                        printf("\nCliente Cadastrado com sucesso!\n");
+                        posicaoAtual++;
+                    }else{
+                        printf("\nFalha ao Cadastrar novo cliente!\n");
+                    }
                 }else{
-                    printf("\nFalha ao Cadastrar novo cliente!\n");
+                    printf("\nConta Corrente já existente!\n");
                 }
             break;
             case 2:
