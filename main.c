@@ -101,11 +101,19 @@ int localizarContaCorrente(Conta * contas,int posicaoAtual){
     return Id;
 }
 
-void exibirTodosOsClientes(Conta * contas,int posicaoAtual){
-    printf("\t\t\tTodos os Clientes\n");
-    printf("Nome\t\t|Agencia\t|Conta\t|Saldo\n\n");
+int localizarLinhaDoId(Conta * contas,int posicaoAtual,int id){
     for (int i = 0; i < posicaoAtual;i++){
-        printf("%-15s\t",contas[i].cliente.Nome);
+        if (id == contas[i].cliente.Id) return i;
+    }
+    return -1;
+}
+
+void exibirTodosOsClientes(Conta * contas,int posicaoAtual){
+    printf("\t\tTodos os Clientes\n");
+    printf("Cód. Cliente\t|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
+    for (int i = 0; i < posicaoAtual;i++){
+        printf("|%-10d\t",contas[i].cliente.Id);
+        printf("|%-10s\t",contas[i].cliente.Nome);
         printf("|%d\t\t",contas[i].Agencia);
         printf("|%s\t",contas[i].ContaCorrente);
         printf("|%.2f\n",contas[i].SaldoAtual);
@@ -115,7 +123,8 @@ void exibirTodosOsClientes(Conta * contas,int posicaoAtual){
 void exibirUmCliente(Conta * contas, int posicaoAtual){
     int idCliente = localizarContaCorrente(contas,posicaoAtual);
     if (idCliente >= 0){
-        printf("|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
+        printf("Cód. Cliente \t|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
+        printf("|%-10d\t",contas[idCliente].cliente.Id);
         printf("|%s\t",contas[idCliente].cliente.Nome);
         printf("|%d\t\t",contas[idCliente].Agencia);
         printf("|%s\t",contas[idCliente].ContaCorrente);
@@ -303,13 +312,13 @@ int main()
                 if (posicaoAtual != 0){
                     int posicaoClienteOrigem,posicaoClienteDestino;
                     double valorTransferencia;
-                    printf("Origem:\n");
+                    printf("De ");
                     posicaoClienteOrigem = localizarContaCorrente(contas,posicaoAtual);
                     if (posicaoClienteOrigem < 0){
                         printf("Conta de Origem não encontrada\n");
                         break;
                     }
-                    printf("Destino:\n");
+                    printf("Para ");
                     posicaoClienteDestino = localizarContaCorrente(contas,posicaoAtual);
                     if (posicaoClienteDestino < 0){
                         printf("Conta de Destino não encontrada\n");
@@ -332,7 +341,30 @@ int main()
                 }
                 break;
             case 5:
-                    //Area Pix
+                int idUsuario,idPix;
+                double valorPix;
+                if (posicaoAtual != 0){
+                    printf("Qual o id do usuário: ");
+                    scanf("%d",&idUsuario);
+                    idUsuario = localizarLinhaDoId(contas,posicaoAtual,idUsuario);
+                    printf("Chave pix destino: (id)");
+                    scanf("%d",&idPix);
+                    idPix = localizarLinhaDoId(contas,posicaoAtual,idPix);
+                    char valorTemp[200];
+                    printf("Valor: ");
+                    scanf("%s",&valorTemp);
+                    for (int i = 0; i < strlen(valorTemp);i++){
+                        if (valorTemp[i] == ','){
+                            valorTemp[i] = '.';
+                        }
+                    }
+                    valorPix = atof(valorTemp);
+                    if (transferir(&contas[idUsuario],&contas[idPix],valorPix)){
+                        printf("Pix realizado com sucesso!\n");
+                    }else{
+                        printf("Ocorreu um erro durante a Transação!\n");
+                    }
+                }
             break;
             case 6:
                 int opcaoExibirSaldo;
@@ -351,7 +383,6 @@ int main()
                 }
             break;
             case 7:
-
                 menuAtivado = false;
             break;
             default:
