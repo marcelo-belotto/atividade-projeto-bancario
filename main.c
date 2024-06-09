@@ -347,9 +347,17 @@ int main()
                     printf("Qual o id do usuário: ");
                     scanf("%d",&idUsuario);
                     idUsuario = localizarLinhaDoId(contas,posicaoAtual,idUsuario);
+                    if (idUsuario == -1){
+                        printf("Chave Pix não encontrada!\n");
+                        break;
+                    }
                     printf("Chave pix destino: (id)");
                     scanf("%d",&idPix);
                     idPix = localizarLinhaDoId(contas,posicaoAtual,idPix);
+                    if (idPix == -1){
+                        printf("Chave Pix não encontrada!\n");
+                        break;
+                    }
                     char valorTemp[200];
                     printf("Valor: ");
                     scanf("%s",&valorTemp);
