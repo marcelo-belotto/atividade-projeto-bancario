@@ -110,7 +110,7 @@ int localizarLinhaDoId(Conta * contas,int posicaoAtual,int id){
 
 void exibirTodosOsClientes(Conta * contas,int posicaoAtual){
     printf("\t\tTodos os Clientes\n");
-    printf("Cód. Cliente\t|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
+    printf("|Cód. Cliente\t|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
     for (int i = 0; i < posicaoAtual;i++){
         printf("|%-10d\t",contas[i].cliente.Id);
         printf("|%-10s\t",contas[i].cliente.Nome);
@@ -120,15 +120,17 @@ void exibirTodosOsClientes(Conta * contas,int posicaoAtual){
     }
 }
 
-void exibirUmCliente(Conta * contas, int posicaoAtual){
-    int idCliente = localizarContaCorrente(contas,posicaoAtual);
+void exibirUmCliente(Conta * contas, int posicaoAtual, int id){
+    int idCliente = localizarLinhaDoId(contas,posicaoAtual,id);
     if (idCliente >= 0){
-        printf("Cód. Cliente \t|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
+        printf("|Cód. Cliente \t|Nome\t\t|Agencia\t|Conta\t|Saldo\n");
         printf("|%-10d\t",contas[idCliente].cliente.Id);
-        printf("|%s\t",contas[idCliente].cliente.Nome);
+        printf("|%-10s\t",contas[idCliente].cliente.Nome);
         printf("|%d\t\t",contas[idCliente].Agencia);
         printf("|%s\t",contas[idCliente].ContaCorrente);
         printf("|%.2f\n",contas[idCliente].SaldoAtual);
+    }else{
+        printf("Cliente não cadastrado!\n");
     }
 }
 
@@ -380,7 +382,10 @@ int main()
                 scanf("%d", &opcaoExibirSaldo);
                 switch (opcaoExibirSaldo){
                     case 1:
-                        exibirUmCliente(contas,posicaoAtual);
+                        int idTemp;
+                        printf("Código do Cliente: ");
+                        scanf("%d",&idTemp);
+                        exibirUmCliente(contas,posicaoAtual,idTemp);
                     break;
                     case 2:
                         exibirTodosOsClientes(contas,posicaoAtual);
