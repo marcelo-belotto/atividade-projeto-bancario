@@ -37,7 +37,12 @@
     }
 
     bool cadastrar(Conta * contas,int posicaoAtual){
-        int idTemp = posicaoAtual+1;
+        int idTemp;
+        if (posicaoAtual == 0){
+            idTemp = 1;
+        }else{
+            idTemp = contas[posicaoAtual-1].cliente.Id + 1;
+        }
         char nomeTemp[50];
         int agenciaTemp;
         char contaCorrente[50];
@@ -329,6 +334,7 @@ bool pixCredito(Conta *contas, int posicaoAtual) {
                     }
                 break;
                 case 2:
+                    exibirTodosOsClientes(contas,posicaoAtual);
                     if (posicaoAtual != 0){
                         int IdCliente = localizarContaCorrente(contas,posicaoAtual);
                         if (IdCliente < 0){
@@ -354,6 +360,7 @@ bool pixCredito(Conta *contas, int posicaoAtual) {
                     }
                 break;
                 case 3:
+                    exibirTodosOsClientes(contas,posicaoAtual);
                     if (posicaoAtual != 0){
                         int IdCliente = localizarContaCorrente(contas,posicaoAtual);
                         if (IdCliente < 0){
@@ -380,6 +387,7 @@ bool pixCredito(Conta *contas, int posicaoAtual) {
                     }
                 break;
                 case 4:
+                    exibirTodosOsClientes(contas,posicaoAtual);
                     if (posicaoAtual != 0){
                         int posicaoClienteOrigem,posicaoClienteDestino;
                         double valorTransferencia;
@@ -412,6 +420,7 @@ bool pixCredito(Conta *contas, int posicaoAtual) {
                     }
                     break;
                 case 5:
+                    exibirTodosOsClientes(contas,posicaoAtual);
                     int idUsuario,idPix;
                     double valorPix;
                     if (posicaoAtual != 0){
@@ -448,6 +457,7 @@ bool pixCredito(Conta *contas, int posicaoAtual) {
 
                 break;
                 case 6:
+                    exibirTodosOsClientes(contas,posicaoAtual);
                     pixCredito(contas, posicaoAtual);
                 break;
                 case 7:
